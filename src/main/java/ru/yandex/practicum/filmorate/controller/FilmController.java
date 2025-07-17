@@ -2,31 +2,32 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dao.FilmDao;
-import ru.yandex.practicum.filmorate.dao.FilmDaoImpl;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
 
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    private final FilmDao filmDao = new FilmDaoImpl();
+    private final FilmService filmService;
+
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @GetMapping
     public Collection<Film> getFilms() {
-        return filmDao.getFilms().values();
+        return filmService.getFilms().values();
     }
 
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film film) {
-        filmDao.addFilm(film);
-        return filmDao.getFilm(film.getId());
+        return filmService.addFilm(film);
     }
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
-        filmDao.updateFilm(film);
-        return filmDao.getFilm(film.getId());
+        return filmService.updateFilm(film);
     }
 }

@@ -2,31 +2,32 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dao.UserDao;
-import ru.yandex.practicum.filmorate.dao.UserDaoImpl;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserDao userDao = new UserDaoImpl();
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public Collection<User> getUsers() {
-        return userDao.getUsers().values();
+        return userService.getUsers().values();
     }
 
     @PostMapping
     public User addUser(@Valid @RequestBody User user) {
-        userDao.createUser(user);
-        return userDao.getUser(user.getId());
+        return userService.createUser(user);
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        userDao.updateUser(user);
-        return userDao.getUser(user.getId());
+        return userService.updateUser(user);
     }
 }

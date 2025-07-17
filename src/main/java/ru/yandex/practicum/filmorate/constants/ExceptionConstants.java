@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.constants;
 
 public class ExceptionConstants {
+    private ExceptionConstants() {
+    }
+
     public static final String DESCRIPTION_LENGTH_LIMIT = "Превышен размер описания";
     public static final String WRONG_RELEASE_DATE = "Неверная дата релиза";
     public static final String WRONG_FILM_DURATION = "Продолжительность не может быть отрицательной";

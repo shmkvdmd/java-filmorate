@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.constants;
 
 public class LogConstants {
+    private LogConstants() {
+    }
+
     public static final String GET_ERROR = "Get error. Wrong id: {}}";
     public static final String FILM_ADDED = "Film with id {} added";
     public static final String FILM_UPDATED = "Film with id {} updated";
