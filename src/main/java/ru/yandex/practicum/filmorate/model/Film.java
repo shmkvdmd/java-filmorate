@@ -1,12 +1,37 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import ru.yandex.practicum.filmorate.model.json.DurationDeserializer;
+import ru.yandex.practicum.filmorate.model.json.DurationSerializer;
 
-/**
- * Film.
- */
-@Getter
-@Setter
+import java.time.Duration;
+import java.time.LocalDate;
+
+@Data
+@EqualsAndHashCode(of = "id")
+@Builder
 public class Film {
+    private Long id;
+
+    @NotNull
+    @NotBlank
+    private String name;
+
+    @NotNull
+    @NotBlank
+    private String description;
+
+    @NotNull
+    private LocalDate releaseDate;
+
+    @NotNull
+    @JsonDeserialize(using = DurationDeserializer.class)
+    @JsonSerialize(using = DurationSerializer.class)
+    private Duration duration;
 }
