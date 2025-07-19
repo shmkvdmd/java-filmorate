@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = "id")
@@ -27,4 +28,6 @@ public class User {
 
     @NotNull
     private LocalDate birthday;
+
+    private Set<Long> friends;
 }

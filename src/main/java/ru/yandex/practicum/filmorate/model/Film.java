@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.json.DurationSerializer;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = "id")
@@ -34,4 +35,6 @@ public class Film {
     @JsonDeserialize(using = DurationDeserializer.class)
     @JsonSerialize(using = DurationSerializer.class)
     private Duration duration;
+
+    private Set<Long> userIdLikes;
 }
