@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.MockData;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.dao.UserDaoImpl;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,5 +46,66 @@ public class UserServiceTest {
         assertEquals(1L, addedUser.getId());
         assertEquals(user.getLogin(), addedUser.getName());
         assertTrue(userDao.getUsers().containsValue(addedUser));
+    }
+
+    @Test
+    public void shouldAddFriend() {
+        User user1 = userService.createUser(MockData.createUser());
+        User user2 = userService.createUser(MockData.createUser());
+        userService.addFriend(1L, 2L);
+        assertTrue(user1.getFriends().contains(2L));
+        assertEquals(1, user1.getFriends().size());
+        assertTrue(user2.getFriends().contains(1L));
+    }
+
+    @Test
+    public void shouldThrowExceptionIfUserNotFoundWhenAddingFriend() {
+        userService.createUser(MockData.createUser());
+        assertThrows(NotFoundException.class, () -> userService.addFriend(1L, 999L));
+    }
+
+    @Test
+    public void shouldThrowExceptionIfUserEqualAddingFriend() {
+        userService.createUser(MockData.createUser());
+        assertThrows(ValidationException.class, () -> userService.addFriend(1L, 1L));
+    }
+
+    @Test
+    public void shouldDeleteFriend() {
+        User user1 = userService.createUser(MockData.createUser());
+        User user2 = userService.createUser(MockData.createUser());
+        userService.addFriend(1L, 2L);
+        userService.deleteFriend(1L, 2L);
+        assertFalse(user1.getFriends().contains(2L));
+        assertEquals(0, user1.getFriends().size());
+        assertFalse(user2.getFriends().contains(1L));
+    }
+
+    @Test
+    public void shouldThrowExceptionIfUserNotFoundWhenDeletingFriend() {
+        userService.createUser(MockData.createUser());
+        assertThrows(NotFoundException.class, () -> userService.deleteFriend(1L, 999L));
+    }
+
+    @Test
+    public void shouldReturnCommonFriends() {
+        userService.createUser(MockData.createUser());
+        userService.createUser(MockData.createUser());
+        User user3 = userService.createUser(MockData.createUser());
+        userService.addFriend(1L, 3L);
+        userService.addFriend(2L, 3L);
+        Set<User> commonFriends = userService.getCommonFriends(1L, 2L);
+        assertEquals(1, commonFriends.size());
+        assertTrue(commonFriends.contains(user3));
+    }
+
+    @Test
+    public void shouldReturnFriends() {
+        userService.createUser(MockData.createUser());
+        User user2 = userService.createUser(MockData.createUser());
+        userService.addFriend(1L, 2L);
+        Set<User> friends = userService.getFriends(1L);
+        assertEquals(1, friends.size());
+        assertTrue(friends.contains(user2));
     }
 }

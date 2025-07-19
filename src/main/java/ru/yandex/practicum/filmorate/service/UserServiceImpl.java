@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.constants.ExceptionConstants;
@@ -10,16 +11,16 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserDao userDao;
-
-    public UserServiceImpl(UserDao userDao) {
-        this.userDao = userDao;
-    }
 
     @Override
     public Map<Long, User> getUsers() {
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserService {
         validateUser(user);
         Long id = getNextId();
         user.setId(id);
+        user.setFriends(new HashSet<>());
         userDao.createUser(user);
         log.info(LogConstants.USER_ADDED, id);
         return user;
@@ -58,6 +60,7 @@ public class UserServiceImpl implements UserService {
         }
         validateUser(user);
         if (userDao.getUsers().containsKey(id)) {
+            user.setFriends(userDao.getUser(id).getFriends());
             userDao.updateUser(user);
             log.info(LogConstants.USER_UPDATED, id);
             return user;
@@ -75,6 +78,65 @@ public class UserServiceImpl implements UserService {
             log.warn(LogConstants.USER_VALIDATION_ERROR);
             throw new ValidationException(ExceptionConstants.WRONG_USER_BIRTHDAY);
         }
+    }
+
+    @Override
+    public User addFriend(Long userId, Long friendId) {
+        validateFriend(userId, friendId);
+        User user = userDao.getUser(userId);
+        User friend = userDao.getUser(friendId);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
+        return user;
+    }
+
+    private void validateFriend(Long userId, Long friendId) {
+        if (userId < 0 || friendId < 0) {
+            throw new ValidationException(ExceptionConstants.NEGATIVE_ID);
+        }
+        if (userId.equals(friendId)) {
+            log.warn(LogConstants.ADD_FRIEND_ERROR_EQUAL_ID);
+            throw new ValidationException(ExceptionConstants.ADD_FRIEND_EQUAL);
+        }
+        if (userDao.getUser(userId) == null) {
+            log.warn(LogConstants.USER_NOT_FOUND_BY_ID, userId);
+            throw new NotFoundException(String.format(ExceptionConstants.USER_NOT_FOUND_BY_ID, userId));
+        }
+        if (userDao.getUser(friendId) == null) {
+            log.warn(LogConstants.USER_NOT_FOUND_BY_ID, friendId);
+            throw new NotFoundException(String.format(ExceptionConstants.USER_NOT_FOUND_BY_ID, friendId));
+        }
+    }
+
+    @Override
+    public User deleteFriend(Long userId, Long friendId) {
+        validateFriend(userId, friendId);
+        User user = userDao.getUser(userId);
+        User friend = userDao.getUser(friendId);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
+        return user;
+    }
+
+    @Override
+    public Set<User> getCommonFriends(Long userId, Long friendId) {
+        validateFriend(userId, friendId);
+        Set<Long> intersection = new HashSet<>(userDao.getUser(userId).getFriends());
+        intersection.retainAll(userDao.getUser(friendId).getFriends());
+        intersection.remove(userId);
+        return intersection.stream().map(userDao::getUser)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<User> getFriends(Long userId) {
+        User user = userDao.getUser(userId);
+        if (user == null) {
+            log.warn(LogConstants.USER_NOT_FOUND_BY_ID, userId);
+            throw new NotFoundException(String.format(ExceptionConstants.USER_NOT_FOUND_BY_ID, userId));
+        }
+        return user.getFriends().stream()
+                .map(userDao::getUser).collect(Collectors.toSet());
     }
 
     private Long getNextId() {
