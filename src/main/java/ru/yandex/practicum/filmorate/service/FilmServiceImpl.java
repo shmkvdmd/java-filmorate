@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.constants.ExceptionConstants;
@@ -12,22 +13,18 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class FilmServiceImpl implements FilmService {
     private final FilmDao filmDao;
     private final UserDao userDao;
     private static final Integer MAX_FILM_DESCRIPTION_LENGTH = 200;
     private static final LocalDate MIN_FILM_RELEASE_DATE = LocalDate.of(1895, 12, 28);
-
-    public FilmServiceImpl(FilmDao filmDao, UserDao userDao) {
-        this.filmDao = filmDao;
-        this.userDao = userDao;
-    }
 
     @Override
     public Map<Long, Film> getFilms() {
@@ -93,6 +90,7 @@ public class FilmServiceImpl implements FilmService {
         validateLike(filmId, userId);
         Film film = filmDao.getFilm(filmId);
         film.getUserIdLikes().add(userId);
+        log.info(LogConstants.FILM_LIKE, userId, filmId);
         return film;
     }
 
@@ -101,19 +99,21 @@ public class FilmServiceImpl implements FilmService {
         validateLike(filmId, userId);
         Film film = filmDao.getFilm(filmId);
         film.getUserIdLikes().remove(userId);
+        log.info(LogConstants.FILM_DELETE_LIKE, userId, filmId);
         return film;
     }
 
     @Override
-    public Set<Film> getPopularFilms(Long count) {
+    public List<Film> getPopularFilms(Long count) {
         if (count < 0) {
             log.warn(LogConstants.NEGATIVE_REQUEST_PARAM);
             throw new ValidationException(ExceptionConstants.NEGATIVE_FILM_COUNT);
         }
+        log.info(LogConstants.POPULAR_FILMS_REQUEST, count);
         return filmDao.getFilms().values().stream()
                 .sorted((f1, f2) -> Integer.compare(f2.getUserIdLikes().size(), f1.getUserIdLikes().size()))
                 .limit(count)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
     private void validateLike(Long filmId, Long userId) {

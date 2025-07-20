@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
             return user;
         }
         log.warn(LogConstants.UPDATE_ERROR, id);
-        throw new NotFoundException(String.format(ExceptionConstants.FILM_NOT_FOUND_BY_ID, id));
+        throw new NotFoundException(String.format(ExceptionConstants.USER_NOT_FOUND_BY_ID, id));
     }
 
     private void validateUser(User user) {
@@ -87,6 +87,7 @@ public class UserServiceImpl implements UserService {
         User friend = userDao.getUser(friendId);
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
+        log.info(LogConstants.USER_ADD_FRIEND, userId, friendId);
         return user;
     }
 
@@ -115,6 +116,7 @@ public class UserServiceImpl implements UserService {
         User friend = userDao.getUser(friendId);
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
+        log.info(LogConstants.USER_DELETE_FRIEND, userId, friendId);
         return user;
     }
 
@@ -124,6 +126,7 @@ public class UserServiceImpl implements UserService {
         Set<Long> intersection = new HashSet<>(userDao.getUser(userId).getFriends());
         intersection.retainAll(userDao.getUser(friendId).getFriends());
         intersection.remove(userId);
+        log.info(LogConstants.COMMON_FRIENDS_REQUEST, userId, friendId);
         return intersection.stream().map(userDao::getUser)
                 .collect(Collectors.toSet());
     }
@@ -135,6 +138,7 @@ public class UserServiceImpl implements UserService {
             log.warn(LogConstants.USER_NOT_FOUND_BY_ID, userId);
             throw new NotFoundException(String.format(ExceptionConstants.USER_NOT_FOUND_BY_ID, userId));
         }
+        log.info(LogConstants.FRIENDS_REQUEST, userId);
         return user.getFriends().stream()
                 .map(userDao::getUser).collect(Collectors.toSet());
     }
