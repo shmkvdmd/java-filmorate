@@ -21,8 +21,7 @@ public class LogConstants {
     public static final String POPULAR_FILMS_REQUEST = "Request popular films with param count value {}";
     public static final String COMMON_FRIENDS_REQUEST = "Request common friends of {} and {}";
     public static final String FRIENDS_REQUEST = "Request friends of user with id {}";
-
-
+    
     public static final String NEGATIVE_REQUEST_PARAM = "Negative request param";
     public static final String USER_NOT_FOUND_BY_ID = "User with id {} not found";
     public static final String FILM_NOT_FOUND_BY_ID = "Film with id {} not found";

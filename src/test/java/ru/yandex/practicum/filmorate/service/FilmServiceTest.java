@@ -14,7 +14,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -113,7 +113,7 @@ public class FilmServiceTest {
         user.setId(1L);
         userDao.createUser(user);
         filmService.addLike(film1.getId(), 1L);
-        Set<Film> popularFilms = filmService.getPopularFilms(1L);
+        List<Film> popularFilms = filmService.getPopularFilms(1L);
         assertEquals(1, popularFilms.size());
         assertTrue(popularFilms.contains(film1));
     }
