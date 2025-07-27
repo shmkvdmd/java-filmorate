@@ -3,5 +3,5 @@
 
 ---
 # ER-диаграмма
-![](https://github.com/shmkvdmd/java-filmorate/ERdiagramm.png)
+<img src="https://github.com/shmkvdmd/java-filmorate/blob/main/ERdiagramm.png" alt="erdiagramm" width="600"/>
 
