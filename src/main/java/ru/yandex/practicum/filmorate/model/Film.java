@@ -43,4 +43,6 @@ public class Film {
 
     @NotNull
     private MPA mpa;
+
+    private Set<Long> userIdLikes;
 }

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -31,16 +32,17 @@ public class User {
     private LocalDate birthday;
 
     @NotNull
-    private Set<Friendship> friendshipSet;
+    private Map<Long, Boolean> friendship;
 
-    @Data
-    @EqualsAndHashCode(of ="friendId")
-    @AllArgsConstructor
-    class Friendship {
-        @NotNull
-        private Long friendId;
-
-        @NotNull
-        private Boolean isConfirmed;
-    }
+//    @Data
+//    @EqualsAndHashCode(of ="friendId")
+//    @AllArgsConstructor
+//    static
+//    class Friendship {
+//        @NotNull
+//        private Long friendId;
+//
+//        @NotNull
+//        private Boolean isConfirmed;
+//    }
 }
