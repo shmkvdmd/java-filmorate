@@ -3,11 +3,13 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = "id")
@@ -27,4 +29,18 @@ public class User {
 
     @NotNull
     private LocalDate birthday;
+
+    @NotNull
+    private Set<Friendship> friendshipSet;
+
+    @Data
+    @EqualsAndHashCode(of ="friendId")
+    @AllArgsConstructor
+    class Friendship {
+        @NotNull
+        private Long friendId;
+
+        @NotNull
+        private Boolean isConfirmed;
+    }
 }
