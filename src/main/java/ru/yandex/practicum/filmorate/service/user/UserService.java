@@ -1,12 +1,12 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.service.user;
 
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 public interface UserService {
-    Map<Long, User> getUsers();
+    List<User> getUsers();
 
     User getUser(Long id);
 

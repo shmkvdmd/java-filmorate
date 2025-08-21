@@ -1,12 +1,11 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.service.film;
 
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
-import java.util.Map;
 
 public interface FilmService {
-    Map<Long, Film> getFilms();
+    List<Film> getFilms();
 
     Film getFilm(Long id);
 

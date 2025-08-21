@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.Duration;
@@ -16,6 +17,7 @@ public class MockData {
                 .description("Test")
                 .releaseDate(LocalDate.of(1895, 12, 28))
                 .duration(Duration.ofMinutes(120))
+                .mpa(new Mpa(1L, null))
                 .build();
     }
 
@@ -31,8 +33,8 @@ public class MockData {
     public static User createUser() {
         return User.builder()
                 .email("user@mail.ru")
-                .login("login")
-                .name("Name")
+                .login("user")
+                .name("User")
                 .birthday(LocalDate.now().minusYears(20))
                 .build();
     }
