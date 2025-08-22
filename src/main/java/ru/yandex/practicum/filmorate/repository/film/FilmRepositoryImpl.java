@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.repository.film;
 
 import lombok.AllArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.constants.ExceptionConstants;
@@ -15,6 +16,7 @@ import ru.yandex.practicum.filmorate.repository.mpa.MpaRepository;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 
@@ -91,28 +93,29 @@ public class FilmRepositoryImpl implements FilmRepository {
     @Override
     public Film findOneById(Long id) {
         Film film;
+        String sql = "SELECT f.id AS id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name AS mpa_name " +
+                "FROM film f LEFT JOIN mpa m ON f.mpa_id = m.id WHERE f.id = ?";
         try {
-            film = jdbcTemplate.queryForObject(
-                    "SELECT f.id AS id, f.name, f.description, f.release_date, f.duration, f.mpa_id " +
-                            "FROM film f WHERE f.id = ?",
-                    (rs, rn) -> Film.builder()
-                            .id(rs.getLong("id"))
-                            .name(rs.getString("name"))
-                            .description(rs.getString("description"))
-                            .releaseDate(rs.getDate("release_date").toLocalDate())
-                            .duration(Duration.ofMinutes(rs.getInt("duration")))
-                            .build(),
-                    id
-            );
+            film = jdbcTemplate.queryForObject(sql, (rs, rn) -> {
+                Film.FilmBuilder builder = Film.builder()
+                        .id(rs.getLong("id"))
+                        .name(rs.getString("name"))
+                        .description(rs.getString("description"))
+                        .releaseDate(rs.getDate("release_date").toLocalDate())
+                        .duration(Duration.ofMinutes(rs.getInt("duration")));
+
+                Long mpaId = rs.getLong("mpa_id");
+                if (!rs.wasNull()) {
+                    String mpaName = rs.getString("mpa_name");
+                    builder.mpa(new Mpa(mpaId, mpaName));
+                } else {
+                    builder.mpa(null);
+                }
+
+                return builder.build();
+            }, id);
         } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException(String.format(ExceptionConstants.FILM_NOT_FOUND_BY_ID, id));
-        }
-
-        Integer mpaId = jdbcTemplate.queryForObject("SELECT mpa_id FROM film WHERE id = ?", Integer.class, id);
-        if (mpaId != null) {
-            film.setMpa(mpaRepository.findOneById(mpaId.longValue()));
-        } else {
-            film.setMpa(null);
         }
 
         film.setGenres(new LinkedHashSet<>(genreRepository.findGenresByFilmId(id)));
@@ -201,20 +204,35 @@ public class FilmRepositoryImpl implements FilmRepository {
     @Override
     public void addGenres(Long filmId, Set<Genre> genres) {
         if (genres == null || genres.isEmpty()) return;
-        LinkedHashSet<Long> genreIds = new LinkedHashSet<>();
-        for (Genre g : genres) {
-            if (g == null || g.getId() == null) continue;
-            genreIds.add(g.getId());
-        }
+        List<Long> genreIds = genres.stream()
+                .filter(g -> g != null && g.getId() != null)
+                .map(Genre::getId)
+                .toList();
+
+        if (genreIds.isEmpty()) return;
+        String existsSql = "SELECT genre_id FROM film_genre WHERE film_id = ? AND genre_id IN (?)";
+        List<Long> existingGenreIds = jdbcTemplate.queryForList(existsSql, Long.class, filmId,
+                String.join(",", genreIds.stream().map(String::valueOf).toList()));
+
+        List<Long> newGenreIds = genreIds.stream()
+                .filter(id -> !existingGenreIds.contains(id))
+                .toList();
+
+        if (newGenreIds.isEmpty()) return;
 
         String insertSql = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
-        String existsSql = "SELECT count(*) FROM film_genre WHERE film_id = ? AND genre_id = ?";
-        for (Long gid : genreIds) {
-            Integer exists = jdbcTemplate.queryForObject(existsSql, Integer.class, filmId, gid);
-            if (exists == null || exists == 0) {
-                jdbcTemplate.update(insertSql, filmId, gid);
+        jdbcTemplate.batchUpdate(insertSql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, filmId);
+                ps.setLong(2, newGenreIds.get(i));
             }
-        }
+
+            @Override
+            public int getBatchSize() {
+                return newGenreIds.size();
+            }
+        });
     }
 
     @Override
