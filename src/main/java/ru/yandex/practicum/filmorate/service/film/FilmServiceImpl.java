@@ -1,39 +1,37 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.service.film;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.constants.ExceptionConstants;
 import ru.yandex.practicum.filmorate.constants.LogConstants;
-import ru.yandex.practicum.filmorate.dao.FilmDao;
-import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class FilmServiceImpl implements FilmService {
-    private final FilmDao filmDao;
-    private final UserDao userDao;
+    private final FilmRepository filmRepository;
+    private final UserRepository userRepository;
     private static final Integer MAX_FILM_DESCRIPTION_LENGTH = 200;
     private static final LocalDate MIN_FILM_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     @Override
-    public Map<Long, Film> getFilms() {
-        return filmDao.getFilms();
+    public List<Film> getFilms() {
+        return filmRepository.findAll();
     }
 
     @Override
     public Film getFilm(Long id) {
-        Film film = filmDao.getFilm(id);
+        Film film = filmRepository.findOneById(id);
         if (film == null) {
             log.warn(LogConstants.GET_ERROR, id);
             throw new NotFoundException(String.format(ExceptionConstants.FILM_NOT_FOUND_BY_ID, id));
@@ -44,12 +42,9 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film addFilm(Film film) {
         validateFilm(film);
-        Long id = getNextId();
-        film.setId(id);
-        film.setUserIdLikes(new HashSet<>());
-        filmDao.addFilm(film);
-        log.info(LogConstants.FILM_ADDED, id);
-        return film;
+        Film saved = filmRepository.saveFilm(film);
+        log.info(LogConstants.FILM_ADDED, saved.getId());
+        return saved;
     }
 
     @Override
@@ -60,17 +55,16 @@ public class FilmServiceImpl implements FilmService {
             throw new ValidationException(ExceptionConstants.EMPTY_ID);
         }
         validateFilm(film);
-        if (filmDao.getFilms().containsKey(id)) {
-            film.setUserIdLikes(filmDao.getFilm(id).getUserIdLikes());
-            filmDao.updateFilm(film);
-            log.info(LogConstants.FILM_UPDATED, id);
-            return film;
-        }
-        log.warn(LogConstants.UPDATE_ERROR, id);
-        throw new NotFoundException(String.format(ExceptionConstants.FILM_NOT_FOUND_BY_ID, id));
+        Film updated = filmRepository.updateFilm(film);
+        log.info(LogConstants.FILM_UPDATED, id);
+        return updated;
     }
 
     private void validateFilm(Film film) {
+        if (film.getName().isBlank()) {
+            log.warn(LogConstants.FILM_VALIDATION_ERROR);
+            throw new ValidationException(ExceptionConstants.EMPTY_FILM_NAME);
+        }
         if (film.getDescription().length() > MAX_FILM_DESCRIPTION_LENGTH) {
             log.warn(LogConstants.FILM_VALIDATION_ERROR);
             throw new ValidationException(ExceptionConstants.DESCRIPTION_LENGTH_LIMIT);
@@ -88,19 +82,17 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film addLike(Long filmId, Long userId) {
         validateLike(filmId, userId);
-        Film film = filmDao.getFilm(filmId);
-        film.getUserIdLikes().add(userId);
+        filmRepository.addLike(filmId, userId);
         log.info(LogConstants.FILM_LIKE, userId, filmId);
-        return film;
+        return getFilm(filmId);
     }
 
     @Override
     public Film deleteLike(Long filmId, Long userId) {
         validateLike(filmId, userId);
-        Film film = filmDao.getFilm(filmId);
-        film.getUserIdLikes().remove(userId);
+        filmRepository.removeLike(filmId, userId);
         log.info(LogConstants.FILM_DELETE_LIKE, userId, filmId);
-        return film;
+        return getFilm(filmId);
     }
 
     @Override
@@ -110,8 +102,9 @@ public class FilmServiceImpl implements FilmService {
             throw new ValidationException(ExceptionConstants.NEGATIVE_FILM_COUNT);
         }
         log.info(LogConstants.POPULAR_FILMS_REQUEST, count);
-        return filmDao.getFilms().values().stream()
-                .sorted((f1, f2) -> Integer.compare(f2.getUserIdLikes().size(), f1.getUserIdLikes().size()))
+        return filmRepository.findAll().stream()
+                .sorted((f1, f2) -> Integer.compare(filmRepository.getLikesCount(f2.getId()),
+                        filmRepository.getLikesCount(f1.getId())))
                 .limit(count)
                 .collect(Collectors.toList());
     }
@@ -121,20 +114,13 @@ public class FilmServiceImpl implements FilmService {
             log.warn(LogConstants.NEGATIVE_REQUEST_PARAM);
             throw new ValidationException(ExceptionConstants.NEGATIVE_ID);
         }
-        if (userDao.getUser(userId) == null) {
+        if (userRepository.findOneById(userId) == null) {
             log.warn(LogConstants.USER_NOT_FOUND_BY_ID, userId);
             throw new NotFoundException(String.format(ExceptionConstants.USER_NOT_FOUND_BY_ID, userId));
         }
-        if (filmDao.getFilm(filmId) == null) {
+        if (filmRepository.findOneById(filmId) == null) {
             log.warn(LogConstants.FILM_NOT_FOUND_BY_ID, filmId);
             throw new NotFoundException(String.format(ExceptionConstants.FILM_NOT_FOUND_BY_ID, filmId));
         }
-    }
-
-    private Long getNextId() {
-        return filmDao.getFilms().keySet().stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0) + 1;
     }
 }

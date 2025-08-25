@@ -8,6 +8,10 @@ public class ExceptionConstants {
     public static final String WRONG_RELEASE_DATE = "Неверная дата релиза";
     public static final String WRONG_FILM_DURATION = "Продолжительность не может быть отрицательной";
     public static final String FILM_NOT_FOUND_BY_ID = "Фильм с id = %d не найден";
+    public static final String GENRE_NOT_FOUND_BY_ID = "Жанр с id = %d не найден";
+    public static final String GENRES_NOT_FOUND_BY_FILM_ID = "Жанры для фильма с id = %d не найдены";
+    public static final String RATING_NOT_FOUND_BY_ID = "Рейтинг с id = %d не найден";
+    public static final String RATING_NOT_FOUND_BY_FILM_ID = "Рейтинг для фильма с id = %d не найден";
     public static final String USER_NOT_FOUND_BY_ID = "Пользователь с id = %d не найден";
     public static final String USER_LOGIN_CANT_CONTAIN_SPACE = "Логин пользователя не может содержать пробелы";
     public static final String WRONG_USER_BIRTHDAY = "Дата рождения не может быть в будущем";
@@ -15,4 +19,8 @@ public class ExceptionConstants {
     public static final String NEGATIVE_ID = "Айди должен быть положительным";
     public static final String NEGATIVE_FILM_COUNT = "Число фильмов не может быть отрицательным";
     public static final String ADD_FRIEND_EQUAL = "Нельзя добавить самого себя в друзья";
+    public static final String EMPTY_FILM_NAME = "Название фильма не может быть пустым";
+    public static final String EMPTY_GENRE = "Жанр не задан";
+    public static final String ERROR_SAVE_FILM = "Ошибка сохранения фильма";
+    public static final String ERROR_SAVE_USER = "Ошибка сохранения пользователя";
 }

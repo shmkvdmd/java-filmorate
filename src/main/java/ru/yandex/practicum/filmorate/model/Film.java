@@ -4,11 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import ru.yandex.practicum.filmorate.model.enums.Genre;
-import ru.yandex.practicum.filmorate.model.enums.MPA;
+import lombok.*;
 import ru.yandex.practicum.filmorate.model.json.DurationDeserializer;
 import ru.yandex.practicum.filmorate.model.json.DurationSerializer;
 
@@ -19,6 +15,8 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(of = "id")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Film {
     private Long id;
 
@@ -38,11 +36,9 @@ public class Film {
     @JsonSerialize(using = DurationSerializer.class)
     private Duration duration;
 
-    @NotNull
-    private Set<Genre> genreSet;
+    private Set<Genre> genres;
 
-    @NotNull
-    private MPA mpa;
+    private Mpa mpa;
 
     private Set<Long> userIdLikes;
 }
